@@ -1,0 +1,75 @@
+#include <ESP8266WiFi.h>
+
+WiFiClient client;
+WiFiServer server(80);
+
+#define led D5
+#define led D6
+void setup()
+{
+  // put your setup code here, to run once:
+  Serial.begin(9600);
+  WiFi.begin("Mooazam", "mooazam123");
+  while (WiFi.status() != WL_CONNECTED)
+  {
+    delay(200);
+    Serial.print("..");
+  }
+  Serial.println();
+  Serial.println("NodeMCU is connected!");
+  Serial.println(WiFi.localIP());
+  server.begin();
+  pinMode(led, OUTPUT);
+}
+
+void loop()
+{
+  // put your main code here, to run repeatedly:
+  client = server.available();  //Gets a client that is connected to the server and has data available for reading.
+  if (client == 1)
+  {
+    String request =  client.readStringUntil('\n');
+    Serial.println(request);
+    request.trim();
+    if (request == "GET /led1on HTTP/1.1")
+    {
+      digitalWrite(led, HIGH);
+      Serial.println("LED is ON");
+    }
+    if (request == "GET /led1off HTTP/1.1")
+    {
+      digitalWrite(led, LOW);
+      Serial.println("LED is OFF");
+    }
+  }      
+  client.println("<html>");
+  client.println("<head>");
+  client.println("<title>Document</title>");
+  client.println("</head>");
+
+  client.println("<style>");
+  client.println("h1{font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;}");
+  client.println("*{color: white;text-align: center;background: url('data:image/jpeg;base64,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')no-repeat center fixed;background-size: cover;};}");
+  client.println("button{padding: 5px 30px;background-color: transparent}");
+  client.println("</style>");
+
+  client.println("<body>");
+  client.println("<h1>IOT ELECTRICAL SWITCH BOARD</h1>");
+  client.println("<h3>Welcome To IoT Appliance Control Homepage</h3>");
+  client.println("<h4>Press ON To Turn On Switch & OFF To Turn off The Switch</h4>");
+  client.println("<p>SWITCH 01 Status : OFF</p>");
+  client.println("<a href=\"/led1on\"\"><button>ON</button></a>");
+  client.println("<a href=\"/led1off\"\"><button>OFF</button></a>");
+  client.println("<p>SWITCH 02 Status : OFF</p>");
+  client.println("<a href=\"/led1on\"\"><button>ON</button></a>");
+  client.println("<a href=\"/led1off\"\"><button>OFF</button></a>");
+  client.println("<p>SWITCH 03 Status : OFF</p>");
+  client.println("<a href=\"/led1on\"\"><button>ON</button></a>");
+  client.println("<a href=\"/led1off\"\"><button>OFF</button></a>");
+  client.println("<p>SWITCH 04 Status : OFF</p>");
+  client.println("<a href=\"/led1on\"\"><button>ON</button></a>");
+  client.println("<a href=\"/led1off\"\"><button>OFF</button></a>");
+  client.println("</body>");
+  client.println("</html>");
+
+}
